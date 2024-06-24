@@ -119,7 +119,7 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
     
     beta, alpha = cfg['init_beta'], cfg['init_alpha']
     best_acc, best_epoch = 0.0, 0
-    feat_num = cfg['feat_num']
+    #feat_num = cfg['feat_num']
     
     for train_idx in range(cfg['train_epoch']):
         # Train
@@ -213,6 +213,8 @@ def main():
 
     # Load config file
     args = get_arguments()
+    args.config = 'configs/caltech101.yaml'
+    args.shot = 2
     assert (os.path.exists(args.config))
     
     cfg = yaml.load(open(args.config, 'r'), Loader=yaml.Loader)
@@ -255,18 +257,18 @@ def main():
     APE(cfg, cache_keys, cache_values, val_features, val_labels,  test_features, test_labels, clip_weights)
 
     # ------------------------------------------ APE-T ------------------------------------------
-    # if cfg['dataset'] == 'imagenet':
-    #     imagenet = ImageNet(cfg['root_path'], cfg['shots'], preprocess)
-    #     train_loader_F = torch.utils.data.DataLoader(imagenet.train, batch_size=256, num_workers=8, shuffle=True)
-    # else:   
-    #     dataset = build_dataset(cfg['dataset'], cfg['root_path'], cfg['shots'])
-    #     train_tranform = transforms.Compose([
-    #         transforms.RandomResizedCrop(size=224, scale=(0.5, 1), interpolation=transforms.InterpolationMode.BICUBIC),
-    #         transforms.RandomHorizontalFlip(p=0.5),
-    #         transforms.ToTensor(),
-    #         transforms.Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))])
-    #     train_loader_F = build_data_loader(data_source=dataset.train_x, batch_size=256, tfm=train_tranform, is_train=True, shuffle=True)
-    # APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights, clip_model, train_loader_F)
+    if cfg['dataset'] == 'imagenet':
+        imagenet = ImageNet(cfg['root_path'], cfg['shots'], preprocess)
+        train_loader_F = torch.utils.data.DataLoader(imagenet.train, batch_size=256, num_workers=8, shuffle=True)
+    else:
+        dataset = build_dataset(cfg['dataset'], cfg['root_path'], cfg['shots'])
+        train_tranform = transforms.Compose([
+            transforms.RandomResizedCrop(size=224, scale=(0.5, 1), interpolation=transforms.InterpolationMode.BICUBIC),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))])
+        train_loader_F = build_data_loader(data_source=dataset.train_x, batch_size=256, tfm=train_tranform, is_train=True, shuffle=True)
+    APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights, clip_model, train_loader_F)
     
     
 
