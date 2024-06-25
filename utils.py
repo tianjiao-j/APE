@@ -25,7 +25,7 @@ def cal_criterion(cfg, clip_weights, cache_keys, only_use_txt=True, training_fre
     text_feat = clip_weights.t().unsqueeze(1)
     cache_feat = cache_keys.reshape(cate_num, cfg['shots'], feat_dim)
     
-    save_path = 'caches/{}'.format(cfg['dataset'])
+    save_path = 'caches_downloaded/{}'.format(cfg['dataset'])
     save_file = '{}/criterion_{}_{}shot.pt'.format(save_path, cfg['backbone'].replace('/', ''), cfg['shots'])
     
     if os.path.exists(save_file):
@@ -119,7 +119,7 @@ class APE_Training(nn.Module):
         self.feat_dim, self.cate_num = clip_weights.shape
         
         self.value_weights = nn.Parameter(torch.ones([self.cate_num*cfg['shots'], 1]).half().cuda(), requires_grad=True)
-        self.indices = cal_criterion(cfg, clip_weights, cache_keys)
+        self.indices = cal_criterion(cfg, clip_weights, cache_keys, training_free=False)
 
         self.res = nn.Parameter(torch.zeros([self.cate_num, cfg['training_feat_num']]).half().cuda(), requires_grad=True)
         self.feat_num = cfg['training_feat_num']

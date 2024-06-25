@@ -1,4 +1,6 @@
 caches/
+caches_downloaded/
 .idea/
 __pycache__/
 *.pyc
+outputs/
