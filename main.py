@@ -241,7 +241,7 @@ def main():
     output_dir = path.join('outputs', dataset_name)
     makedirs(output_dir, exist_ok=True)
     result_file = path.join(output_dir, '{}_results.yaml'.format(dataset_name))
-    if cfg['shots'] == 1:
+    if not path.exists(result_file):
         cfg_cp = cfg.copy()
         cfg_cp['shotss'] = []
         cfg_cp['zs_accs'] = []
