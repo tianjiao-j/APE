@@ -11,6 +11,11 @@ import numpy as np
 from tqdm import tqdm
 
 
+def ICA_transform(features):
+    ica_components = torch.load('./caches/imagenet/ica_component_350_16shots.pt')
+    ica_components = ica_components.half().cuda().T
+    return features @ ica_components
+
 def cls_acc(output, target, topk=1):
     pred = output.topk(topk, 1, True, True)[1].t()
     correct = pred.eq(target.view(1, -1).expand_as(pred))
@@ -117,7 +122,8 @@ class APE_Training(nn.Module):
         super(APE_Training, self).__init__()
         self.shots = cfg['shots']
         self.feat_dim, self.cate_num = clip_weights.shape
-        
+
+        # diag(R(FW))
         self.value_weights = nn.Parameter(torch.ones([self.cate_num*cfg['shots'], 1]).half().cuda(), requires_grad=True)
         self.indices = cal_criterion(cfg, clip_weights, cache_keys, training_free=False)
 
@@ -130,10 +136,14 @@ class APE_Training(nn.Module):
         new_cache_keys = cache_keys.clone()
         new_cache_keys = new_cache_keys.reshape(-1, self.feat_dim)
         new_cache_keys[:, self.indices] = new_cache_keys[:, self.indices] + res_keys
+        # new_cache_keys = ICA_transform(cache_keys)
+        # new_cache_keys = new_cache_keys / new_cache_keys.norm(dim=-1, keepdim=True)
     
         res_text = self.res.t()
         new_clip_weights = clip_weights.clone()
-        new_clip_weights[self.indices, :] = clip_weights[self.indices, :] + res_text 
+        new_clip_weights[self.indices, :] = clip_weights[self.indices, :] + res_text
+        # new_clip_weights = ICA_transform(clip_weights.T).T + res_text
+
         new_cache_values = cache_values * self.value_weights
        
         return new_cache_keys.half(), new_clip_weights.half(), new_cache_values.half()

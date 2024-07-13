@@ -93,7 +93,7 @@ if __name__ == '__main__':
                    'oxford_flowers', 'oxford_pets', 'stanford_cars', 'sun397', 'ucf101']
     k_shot = [1, 2, 4, 8, 16]
 
-    data_path = '/data0/zhuxiangyang/adapter/data'
+    data_path = '../Tip-Adapter/data/'
     for set in all_dataset:
         
         cfg = yaml.load(open('configs/{}.yaml'.format(set), 'r'), Loader=yaml.Loader)

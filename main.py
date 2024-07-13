@@ -16,6 +16,8 @@ from datasets.utils import build_data_loader
 import clip
 from utils import *
 
+ica_components = torch.load('./caches/imagenet/ica_component_350_16shots.pt')
+ica_components = ica_components.half().cuda().T
 
 def get_arguments():
     parser = argparse.ArgumentParser()
@@ -41,6 +43,10 @@ def APE(cfg, cache_keys, cache_values, val_features, val_labels, test_features, 
     new_cache_keys = cache_keys[:, indices]
     new_test_features = test_features[:, indices]
     new_val_features = val_features[:, indices]
+    # new_clip_weights = ICA_transform(clip_weights.T).T
+    # new_cache_keys = ICA_transform(cache_keys)
+    # new_test_features = ICA_transform(test_features)
+    # new_val_features = ICA_transform(val_features)
 
     new_clip_weights = new_clip_weights / new_clip_weights.norm(dim=0, keepdim=True)
     new_cache_keys = new_cache_keys / new_cache_keys.norm(dim=-1, keepdim=True)
@@ -141,6 +147,8 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
                 image_features /= image_features.norm(dim=-1, keepdim=True)
 
             new_cache_keys, new_clip_weights, R_FW = adapter(cache_keys, clip_weights, cache_values)
+            # image_features_ica = image_features @ ica_components
+            # image_features_ica = image_features_ica / image_features_ica.norm(dim=0, keepdim=True)
             R_fF = image_features @ new_cache_keys.half().t()
             cache_logits = ((-1) * (beta - beta * R_fF)).exp() @ R_FW
             R_fW = 100. * image_features @ new_clip_weights
@@ -168,6 +176,8 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
         with torch.no_grad():
             new_cache_keys, new_clip_weights, R_FW = adapter(cache_keys, clip_weights, cache_values)
 
+            # val_features_ica = val_features @ ica_components
+            # val_features_ica = val_features_ica / val_features_ica.norm(dim=0, keepdim=True)
             R_fF = val_features @ new_cache_keys.half().t()
             cache_logits = ((-1) * (beta - beta * R_fF)).exp() @ R_FW
             R_fW = 100. * val_features @ new_clip_weights
@@ -195,6 +205,8 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
             with torch.no_grad():
                 new_cache_keys, new_clip_weights, R_FW = adapter(cache_keys, clip_weights, cache_values)
 
+                # val_features_ica = val_features @ ica_components
+                # val_features_ica = val_features_ica / val_features_ica.norm(dim=0, keepdim=True)
                 R_fF = val_features @ new_cache_keys.half().t()
                 cache_logits = ((-1) * (beta - beta * R_fF)).exp() @ R_FW
                 R_fW = 100. * val_features @ new_clip_weights
@@ -210,6 +222,8 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
     with torch.no_grad():
         new_cache_keys, new_clip_weights, R_FW = adapter(cache_keys, clip_weights, cache_values)
 
+        # test_features_ica = test_features @ ica_components
+        # test_features_ica = test_features_ica / test_features_ica.norm(dim=0, keepdim=True)
         R_fF = test_features @ new_cache_keys.half().t()
         cache_logits = ((-1) * (best_beta - best_beta * R_fF)).exp() @ R_FW
         R_fW = 100. * test_features @ new_clip_weights
@@ -223,8 +237,8 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
 def main():
     # Load config file
     args = get_arguments()
-    # args.config = 'configs/eurosat.yaml'
-    # args.shot = 1
+    args.config = 'configs/eurosat.yaml'
+    args.shot = 1
     assert (os.path.exists(args.config))
 
     cfg = yaml.load(open(args.config, 'r'), Loader=yaml.Loader)
