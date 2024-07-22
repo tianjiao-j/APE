@@ -4,3 +4,4 @@ caches_downloaded/
 __pycache__/
 *.pyc
 outputs/
+backup/

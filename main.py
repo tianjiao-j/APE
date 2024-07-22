@@ -16,8 +16,8 @@ from datasets.utils import build_data_loader
 import clip
 from utils import *
 
-ica_components = torch.load('./caches/imagenet/ica_component_350_16shots.pt')
-ica_components = ica_components.half().cuda().T
+# ica_components = torch.load('./caches/imagenet/ica_component_350_16shots.pt')
+# ica_components = ica_components.half().cuda().T
 
 def get_arguments():
     parser = argparse.ArgumentParser()
@@ -237,14 +237,18 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
 def main():
     # Load config file
     args = get_arguments()
-    args.config = 'configs/eurosat.yaml'
-    args.shot = 1
+    # args.config = 'configs/eurosat.yaml'
+    # args.shot = 1
     assert (os.path.exists(args.config))
 
     cfg = yaml.load(open(args.config, 'r'), Loader=yaml.Loader)
     cfg['shots'] = args.shot
     print(cfg['shots'])
     dataset_name = cfg['dataset']
+    if dataset_name != 'eurosat':
+        cfg['train_epoch'] = 20
+    else:
+        cfg['train_epoch'] = 100
 
     cfg['root_path'] = '../Tip-Adapter/data/'
     cache_dir = os.path.join('./caches_downloaded', dataset_name)
