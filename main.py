@@ -1,5 +1,5 @@
 import os
-from os import path, makedirs
+from os import path, makedirs, environ
 import random
 import argparse
 import yaml
@@ -139,7 +139,7 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
         adapter.train()
         correct_samples, all_samples = 0, 0
         loss_list = []
-        print('Train Epoch: {:} / {:} || '.format(train_idx, cfg['train_epoch']), end='')
+        print('Train Epoch: {:>2} / {:} || '.format(train_idx, cfg['train_epoch']), end='')
 
         for i, (images, target) in enumerate(train_loader_F):
             images, target = images.cuda(), target.cuda()
@@ -168,9 +168,9 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
             scheduler.step()
 
         current_lr = scheduler.get_last_lr()[0]
-        print('LR: {:.6f}, Acc: {:.4f} ({:}/{:}), Loss: {:.4f}'.format(current_lr, correct_samples / all_samples,
-                                                                       correct_samples, all_samples,
-                                                                       sum(loss_list) / len(loss_list)))
+        print('LR: {:.6f}, Acc: {:.4f} ({:>3}/{:}), Loss: {:.4f} || '.format(current_lr, correct_samples / all_samples,
+                                                                       int(correct_samples), all_samples,
+                                                                       sum(loss_list) / len(loss_list)), end='')
 
         # Eval
         adapter.eval()
@@ -185,7 +185,7 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
             ape_logits = R_fW + cache_logits * alpha
         acc = cls_acc(ape_logits, val_labels)
 
-        print("**** APE-T's test accuracy: {:.2f}. ****\n".format(acc))
+        print("**** APE-T's test accuracy: {:.2f}. ****".format(acc))
         if acc > best_acc:
             best_acc = acc
             best_epoch = train_idx
@@ -239,9 +239,15 @@ def main():
     start_time = datetime.now().strftime('%Y_%m_%d-%H_%M')
     # Load config file
     args = get_arguments()
-    args.config = 'configs/oxford_flowers.yaml'
-    args.shot = 1
+    if 'IDE_PROJECT_ROOTS' in os.environ.keys():
+        args.config = 'configs/oxford_flowers.yaml'
+        args.shot = 1
+        environ['START_TIME'] = start_time
     assert (os.path.exists(args.config))
+
+    if 'START_TIME' in environ.keys():
+        start_time = environ['START_TIME']
+    print("Start time: ", start_time)
 
     cfg = yaml.load(open(args.config, 'r'), Loader=yaml.Loader)
     cfg['shots'] = args.shot
