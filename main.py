@@ -15,9 +15,10 @@ from datasets import build_dataset
 from datasets.utils import build_data_loader
 import clip
 from utils import *
+from datetime import datetime
 
-ica_components = torch.load('./caches/imagenet/ica_component_350_16shots.pt')
-ica_components = ica_components.half().cuda().T
+# ica_components = torch.load('./caches/imagenet/ica_component_350_16shots.pt')
+# ica_components = ica_components.half().cuda().T
 
 def get_arguments():
     parser = argparse.ArgumentParser()
@@ -28,8 +29,8 @@ def get_arguments():
 
 
 def APE(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights):
-    print(test_labels.shape)
-    print(test_features.shape)
+    # print(test_labels.shape)
+    # print(test_features.shape)
     feat_dim, cate_num = clip_weights.shape
     cache_values = cache_values.reshape(cate_num, -1, cate_num).cuda()
     cache_keys = cache_keys.t().reshape(cate_num, cfg['shots'], feat_dim).reshape(cate_num, -1, feat_dim).cuda()
@@ -94,10 +95,10 @@ def APE(cfg, cache_keys, cache_values, val_features, val_labels, test_features, 
                     ape_logits = R_fW + cache_logits * alpha
                 acc = cls_acc(ape_logits, val_labels)
                 if acc > best_search_acc:
-                    print("New best setting, alpha: {:.2f}, beta: {:.2f}, gamma: {:.2f}; accuracy: {:.2f}".format(alpha,
-                                                                                                                  beta,
-                                                                                                                  gamma,
-                                                                                                                  acc))
+                    # print("New best setting, alpha: {:.2f}, beta: {:.2f}, gamma: {:.2f}; accuracy: {:.2f}".format(alpha,
+                    #                                                                                               beta,
+                    #                                                                                               gamma,
+                    #                                                                                               acc))
                     best_search_acc = acc
                     best_alpha, best_beta, best_gamma = alpha, beta, gamma
     print("\nAfter searching, the best val accuarcy: {:.2f}.\n".format(best_search_acc))
@@ -138,9 +139,9 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
         adapter.train()
         correct_samples, all_samples = 0, 0
         loss_list = []
-        print('Train Epoch: {:} / {:}'.format(train_idx, cfg['train_epoch']))
+        print('Train Epoch: {:} / {:} || '.format(train_idx, cfg['train_epoch']), end='')
 
-        for i, (images, target) in enumerate(tqdm(train_loader_F)):
+        for i, (images, target) in enumerate(train_loader_F):
             images, target = images.cuda(), target.cuda()
             with torch.no_grad():
                 image_features = clip_model.encode_image(images)
@@ -213,7 +214,7 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
                 ape_logits = R_fW + cache_logits * alpha
             acc = cls_acc(ape_logits, val_labels)
             if acc > best_search_acc:
-                print("New best setting, alpha: {:.2f}, beta: {:.2f}; accuracy: {:.2f}".format(alpha, beta, acc))
+                #print("New best setting, alpha: {:.2f}, beta: {:.2f}; accuracy: {:.2f}".format(alpha, beta, acc))
                 best_search_acc = acc
                 best_alpha, best_beta = alpha, beta
     print("\nAfter searching, the best val accuarcy: {:.2f}.\n".format(best_search_acc))
@@ -235,9 +236,10 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
 
 
 def main():
+    start_time = datetime.now().strftime('%Y_%m_%d-%H_%M')
     # Load config file
     args = get_arguments()
-    args.config = 'configs/eurosat.yaml'
+    args.config = 'configs/oxford_flowers.yaml'
     args.shot = 1
     assert (os.path.exists(args.config))
 
@@ -250,9 +252,10 @@ def main():
     cache_dir = os.path.join('./caches_downloaded', dataset_name)
     os.makedirs(cache_dir, exist_ok=True)
     cfg['cache_dir'] = cache_dir
+    cfg['seed'] = 1
     print(cfg)
 
-    output_dir = path.join('outputs', dataset_name)
+    output_dir = path.join('outputs', start_time, dataset_name)
     makedirs(output_dir, exist_ok=True)
     result_file = path.join(output_dir, '{}_results.yaml'.format(dataset_name))
     if not path.exists(result_file):
