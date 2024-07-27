@@ -1,0 +1,38 @@
+{
+    "impath": [
+        "../Tip-Adapter/data/eurosat/2750/AnnualCrop/AnnualCrop_2365.jpg",
+        "../Tip-Adapter/data/eurosat/2750/Forest/Forest_2046.jpg",
+        "../Tip-Adapter/data/eurosat/2750/HerbaceousVegetation/HerbaceousVegetation_503.jpg",
+        "../Tip-Adapter/data/eurosat/2750/Highway/Highway_125.jpg",
+        "../Tip-Adapter/data/eurosat/2750/Industrial/Industrial_2006.jpg",
+        "../Tip-Adapter/data/eurosat/2750/Pasture/Pasture_573.jpg",
+        "../Tip-Adapter/data/eurosat/2750/PermanentCrop/PermanentCrop_1476.jpg",
+        "../Tip-Adapter/data/eurosat/2750/Residential/Residential_1520.jpg",
+        "../Tip-Adapter/data/eurosat/2750/River/River_882.jpg",
+        "../Tip-Adapter/data/eurosat/2750/SeaLake/SeaLake_1624.jpg"
+    ],
+    "label": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+    ],
+    "classname": [
+        "Annual Crop Land",
+        "Forest",
+        "Herbaceous Vegetation Land",
+        "Highway or Road",
+        "Industrial Buildings",
+        "Pasture Land",
+        "Permanent Crop Land",
+        "Residential Buildings",
+        "River",
+        "Sea or Lake"
+    ]
+}

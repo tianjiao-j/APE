@@ -78,7 +78,8 @@ def cal_criterion(cfg, clip_weights, cache_keys, only_use_txt=True, training_fre
 
 
 def load_text_feature(cfg):
-    save_path = cfg['cache_dir'] + "/text_weights_cupl_t.pt"
+    #save_path = cfg['cache_dir'] + "/text_weights_cupl_t.pt"
+    save_path = cfg['cache_dir'] + "/text_weights.pt"
     clip_weights = torch.load(save_path)
     return clip_weights
 
@@ -89,7 +90,7 @@ def load_few_shot_feature(cfg):
     return cache_keys, cache_values
 
 
-def loda_val_test_feature(cfg, split):
+def load_val_test_feature(cfg, split):
     features = torch.load(cfg['cache_dir'] + "/" + split + "_f.pt")
     labels = torch.load(cfg['cache_dir'] + "/" + split + "_l.pt")
     return features, labels

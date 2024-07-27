@@ -58,7 +58,7 @@ def extract_val_test_feature(cfg, split, clip_model, loader):
     return
 
 
-def extract_text_feature(cfg, classnames, prompt_path, clip_model, template):
+def extract_cupl_text_feature(cfg, classnames, prompt_path, clip_model, template):
     f = open(prompt_path)
     prompts = json.load(f)
     with torch.no_grad():
@@ -81,6 +81,32 @@ def extract_text_feature(cfg, classnames, prompt_path, clip_model, template):
 
         clip_weights = torch.stack(clip_weights, dim=1).cuda()
     torch.save(clip_weights, cfg['cache_dir'] + "/text_weights_cupl_t.pt")
+    return
+
+
+def extract_text_feature(cfg, classnames, prompt_path, clip_model, template):
+    f = open(prompt_path)
+    prompts = json.load(f)
+    with torch.no_grad():
+        clip_weights = []
+        for classname in classnames:
+            # Tokenize the prompts
+            classname = classname.replace('_', ' ')
+
+            template_texts = [t.format(classname) for t in template]
+            #cupl_texts = prompts[classname]
+            #texts = template_texts + cupl_texts
+
+            texts_token = clip.tokenize(template_texts).cuda()
+            # prompt ensemble for ImageNet
+            class_embeddings = clip_model.encode_text(texts_token)
+            class_embeddings /= class_embeddings.norm(dim=-1, keepdim=True)
+            class_embedding = class_embeddings.mean(dim=0)
+            class_embedding /= class_embedding.norm()
+            clip_weights.append(class_embedding)
+
+        clip_weights = torch.stack(clip_weights, dim=1).cuda()
+    torch.save(clip_weights, cfg['cache_dir'] + "/text_weights.pt")
     return
 
 

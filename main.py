@@ -259,7 +259,7 @@ def main():
         cfg['train_epoch'] = 100
 
     cfg['root_path'] = '../Tip-Adapter/data/'
-    cache_dir = os.path.join('./caches_downloaded', dataset_name)
+    cache_dir = os.path.join('./caches', dataset_name)
     os.makedirs(cache_dir, exist_ok=True)
     cfg['cache_dir'] = cache_dir
     cfg['seed'] = 1
@@ -296,14 +296,14 @@ def main():
 
     # Pre-load val features
     print("\nLoading visual features and labels from val set.")
-    val_features, val_labels = loda_val_test_feature(cfg, "val")
+    val_features, val_labels = load_val_test_feature(cfg, "val")
 
     # Pre-load test features
     print("\nLoading visual features and labels from test set.")
     if cfg['dataset'] == 'imagenet':
-        test_features, test_labels = loda_val_test_feature(cfg, "val")
+        test_features, test_labels = load_val_test_feature(cfg, "val")
     else:
-        test_features, test_labels = loda_val_test_feature(cfg, "test")
+        test_features, test_labels = load_val_test_feature(cfg, "test")
 
     # ------------------------------------------  APE  ------------------------------------------
     acc, zs_acc = APE(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights)

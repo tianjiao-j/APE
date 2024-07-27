@@ -260,14 +260,15 @@ class DatasetBase:
             dataset_name = self.dataset_dir.split('/')[-1]
             save_path = osp.join('few_shot_split', dataset_name, '{}-{}_shot_split.json'.format(dataset_name,
                                                                                                 num_shots))
-            makedirs(osp.dirname(save_path), exist_ok=True)
-            impaths = [item.impath for item in output[0]]
-            labels = [item.label for item in output[0]]
-            class_names = [item.classname for item in output[0]]
-            few_shot_dict = {'impath': impaths, 'label': labels, 'classname': class_names}
+            if not osp.exists(save_path):
+                makedirs(osp.dirname(save_path), exist_ok=True)
+                impaths = [item.impath for item in output[0]]
+                labels = [item.label for item in output[0]]
+                class_names = [item.classname for item in output[0]]
+                few_shot_dict = {'impath': impaths, 'label': labels, 'classname': class_names}
 
-            with open(save_path, 'w') as f:
-                json.dump(few_shot_dict, f, indent=4)
+                with open(save_path, 'w') as f:
+                    json.dump(few_shot_dict, f, indent=4)
             return output[0]
         else:
             print('********************* Multiple data sources inputted *********************')
