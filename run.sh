@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # dtd oxford_pets stanford_cars ucf101 food101 sun397 fgvc_aircraft eurosat oxford_flowers caltech101 imagenet
-for DATASET_NAME in dtd oxford_pets stanford_cars ucf101 food101 sun397 fgvc_aircraft eurosat oxford_flowers caltech101 imagenet
+for DATASET_NAME in eurosat
 do
   for N_SHOT in 1 2 4 8 16
   do
