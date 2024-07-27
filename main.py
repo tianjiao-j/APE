@@ -247,6 +247,10 @@ def main():
     cfg['shots'] = args.shot
     print(cfg['shots'])
     dataset_name = cfg['dataset']
+    if dataset_name != 'eurosat':
+        cfg['train_epoch'] = 20
+    else:
+        cfg['train_epoch'] = 100
 
     cfg['root_path'] = '../Tip-Adapter/data/'
     cache_dir = os.path.join('./caches_downloaded', dataset_name)
