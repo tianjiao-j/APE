@@ -1,6 +1,7 @@
 caches/
 caches_downloaded/
 .idea/
+.vscode/
 __pycache__/
 *.pyc
 outputs/

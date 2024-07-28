@@ -115,8 +115,9 @@ if __name__ == '__main__':
     clip_model, preprocess = clip.load('RN50')
     clip_model.eval()
     
-    all_dataset = ["caltech101", 'dtd', 'eurosat', 'fgvc', 'food101', 'imagenet', 
-                   'oxford_flowers', 'oxford_pets', 'stanford_cars', 'sun397', 'ucf101']
+    # all_dataset = ["caltech101", 'dtd', 'eurosat', 'fgvc', 'food101', 'imagenet', 
+    #                'oxford_flowers', 'oxford_pets', 'stanford_cars', 'sun397', 'ucf101']
+    all_dataset = ['imagenet', 'oxford_flowers', 'oxford_pets', 'stanford_cars', 'sun397', 'ucf101']
     k_shot = [1, 2, 4, 8, 16]
 
     data_path = '../Tip-Adapter/data/'
@@ -135,7 +136,7 @@ if __name__ == '__main__':
             
             cfg['shots'] = k
             if set == 'imagenet':
-                dataset = ImageNet(cfg['root_path'], cfg['shots'], preprocess)
+                dataset = ImageNet(data_path, cfg['shots'], preprocess)
                 val_loader = torch.utils.data.DataLoader(dataset.test, batch_size=64, num_workers=8, shuffle=False)
                 train_loader_cache = torch.utils.data.DataLoader(dataset.train, batch_size=256, num_workers=8, shuffle=False)           
             else:   

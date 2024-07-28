@@ -11,10 +11,10 @@ import numpy as np
 from tqdm import tqdm
 
 
-def ICA_transform(features):
-    ica_components = torch.load('./caches/imagenet/ica_component_350_16shots.pt')
-    ica_components = ica_components.half().cuda().T
-    return features @ ica_components
+# def ICA_transform(features):
+#     ica_components = torch.load('./caches/imagenet/ica_component_350_16shots.pt')
+#     ica_components = ica_components.half().cuda().T
+#     return features @ ica_components
 
 def cls_acc(output, target, topk=1):
     pred = output.topk(topk, 1, True, True)[1].t()
