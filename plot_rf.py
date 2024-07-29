@@ -44,7 +44,7 @@ dataset_names = ['imagenet', 'fgvc', 'oxford_pets', 'stanford_cars', 'eurosat', 
 # dataset_names.remove('sun397')
 # dataset_names.remove('fgvc')
 shots = [1, 2, 4, 8, 16]
-outputs_dir = 'outputs/2024_07_27-19_48'
+outputs_dir = '/data/tjjiang/APE/outputs/2024_07_28-17_56'
 
 ft_accss = []
 ft_accss_ica = []
