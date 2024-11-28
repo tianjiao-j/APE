@@ -218,3 +218,22 @@ class ImageNet():
         self.train.imgs = imgs
         self.train.targets = targets
         self.train.samples = imgs
+        
+    @staticmethod
+    def read_classnames(text_file):
+        """Return a dictionary containing
+        key-value pairs of <folder name>: <class name>.
+        """
+        #classnames = OrderedDict()
+        indices, folders, classnames = [], [], []
+        with open(text_file, "r") as f:
+            lines = f.readlines()
+            for i, line in enumerate(lines):
+                indices.append(i)
+                line = line.strip().split(" ")
+                folder = line[0]
+                folders.append(folder)
+                classname = " ".join(line[1:])
+                #classnames[folder] = classname
+                classnames.append(classname)
+        return indices, folders, classnames

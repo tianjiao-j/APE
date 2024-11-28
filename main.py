@@ -16,6 +16,8 @@ from datasets.utils import build_data_loader
 import clip
 from utils import *
 from datetime import datetime
+from datasets.imagenet_sketch import ImageNetSketch
+from datasets.imagenetv2 import ImageNetV2
 
 # ica_components = torch.load('./caches/imagenet/ica_component_350_16shots.pt')
 # ica_components = ica_components.half().cuda().T
@@ -26,6 +28,25 @@ def get_arguments():
     parser.add_argument('--config', dest='config', help='settings of APE in yaml format')
     args = parser.parse_args()
     return args
+
+def pre_load_features(clip_model, loader):
+    features, labels = [], []
+    # class_to_idx = loader.dataset.class_to_idx
+    # class_to_idx = {v: k for k, v in class_to_idx.items()}
+    idx_to_idx = loader.dataset.idx_to_idx
+
+    with torch.no_grad():
+        for i, (images, target) in enumerate(loader):
+            target = torch.tensor([int(idx_to_idx[int(i)]) for i in target])
+            images, target = images.cuda(), target.cuda()
+            image_features = clip_model.encode_image(images)
+            image_features /= image_features.norm(dim=-1, keepdim=True)
+            features.append(image_features)
+            labels.append(target)
+
+    features, labels = torch.cat(features), torch.cat(labels)
+
+    return features, labels
 
 
 def APE(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights):
@@ -103,6 +124,7 @@ def APE(cfg, cache_keys, cache_values, val_features, val_labels, test_features, 
                     best_alpha, best_beta, best_gamma = alpha, beta, gamma
     print("\nAfter searching, the best val accuarcy: {:.2f}.\n".format(best_search_acc))
 
+    start_time = datetime.now()
     R_fW = 100. * test_features @ clip_weights
     R_fF = new_test_features @ new_cache_keys.t()
 
@@ -112,6 +134,10 @@ def APE(cfg, cache_keys, cache_values, val_features, val_labels, test_features, 
     ape_logits = R_fW + cache_logits * best_alpha
     acc = cls_acc(ape_logits, test_labels)
     print("**** APE's test accuracy: {:.2f}. ****\n".format(acc))
+    print("Time elapsed: ", datetime.now() - start_time)
+    max_mem_allocated = round(torch.cuda.max_memory_allocated() / 1024 / 1024 / 1024, 4)
+    max_mem_reserved = round(torch.cuda.max_memory_reserved() / 1024 / 1024 / 1024, 4)
+    print('Max memory allocated: {} GB, Max memory reserved: {} GB'.format(max_mem_allocated, max_mem_reserved))
 
     return acc, zs_acc
 
@@ -133,6 +159,8 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
     beta, alpha = cfg['init_beta'], cfg['init_alpha']
     best_acc, best_epoch = 0.0, 0
     # feat_num = cfg['feat_num']
+    
+    start_time = datetime.now()
 
     for train_idx in range(cfg['train_epoch']):
         # Train
@@ -218,8 +246,13 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
                 best_search_acc = acc
                 best_alpha, best_beta = alpha, beta
     print("\nAfter searching, the best val accuarcy: {:.2f}.\n".format(best_search_acc))
-
+    print("Time elapsed: ", datetime.now() - start_time)
+    max_mem_allocated = round(torch.cuda.max_memory_allocated() / 1024 / 1024 / 1024, 4)
+    max_mem_reserved = round(torch.cuda.max_memory_reserved() / 1024 / 1024 / 1024, 4)
+    print('Max memory allocated: {} GB, Max memory reserved: {} GB'.format(max_mem_allocated, max_mem_reserved))
+    
     print("\n-------- Evaluating on the test set. --------")
+    start_time = datetime.now()
     with torch.no_grad():
         new_cache_keys, new_clip_weights, R_FW = adapter(cache_keys, clip_weights, cache_values)
 
@@ -230,6 +263,7 @@ def APE_T(cfg, cache_keys, cache_values, val_features, val_labels, test_features
         R_fW = 100. * test_features @ new_clip_weights
         ape_logits = R_fW + cache_logits * best_alpha
     acc = cls_acc(ape_logits, test_labels)
+    print('Inference time: ', datetime.now() - start_time)
     print("**** APE-T's test accuracy: {:.2f}. ****\n".format(acc))
 
     return acc
@@ -253,10 +287,10 @@ def main():
     cfg['shots'] = args.shot
     print(cfg['shots'])
     dataset_name = cfg['dataset']
-    if dataset_name != 'eurosat':
-        cfg['train_epoch'] = 20
-    else:
-        cfg['train_epoch'] = 100
+    # if dataset_name != 'eurosat':
+    #     cfg['train_epoch'] = 20
+    # else:
+    #     cfg['train_epoch'] = 100
 
     cfg['root_path'] = '../Tip-Adapter/data/'
     cache_dir = os.path.join('./caches', dataset_name)
@@ -304,6 +338,16 @@ def main():
         test_features, test_labels = load_val_test_feature(cfg, "val")
     else:
         test_features, test_labels = load_val_test_feature(cfg, "test")
+        
+    dataset_name = 'imagenet_sketch'
+    if dataset_name == 'imagenetv2':
+        ood_dataset = ImageNetV2(cfg['root_path'], preprocess)
+    elif dataset_name == 'imagenet_sketch':
+        ood_dataset = ImageNetSketch(cfg['root_path'], preprocess)
+
+    test_loader = torch.utils.data.DataLoader(ood_dataset.dataset, batch_size=64, num_workers=8, shuffle=False)
+    test_features, test_labels = pre_load_features(clip_model, test_loader)
+    test_features = test_features.cuda()
 
     # ------------------------------------------  APE  ------------------------------------------
     acc, zs_acc = APE(cfg, cache_keys, cache_values, val_features, val_labels, test_features, test_labels, clip_weights)
